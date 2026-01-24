@@ -1,0 +1,11 @@
+# QUICK START GUIDE
+1. Download Sample AIS data
+    - Download any file from https://coast.noaa.gov/htdata/CMSP/AISDataHandler/2024/index.html
+    - Rename the csv file as SAMPLE_AIS_DATA.csv
+2. Set up the environment
+    - You can use env.yml to set up a conda env
+    - Run the following to get correct versioned KeplerGL: pip install keplergl==0.3.7
+3. Set up the website
+    -   Run ais_visualize.py 
+    -   Set up local server:  python -m http.server 8000
+4. Open on a local browser:   http://localhost:8000/ais_visualizer.html 
