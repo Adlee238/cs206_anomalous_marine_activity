@@ -6,6 +6,11 @@ import path from "path";
 const GFW_4WINGS_API_URL =
   "https://gateway.api.globalfishingwatch.org/v3/4wings/report";
 
+const VESSEL_CACHE_TTL_MS = 10 * 60 * 1000;  // Cache vessel results for 10 minutes
+let cachedGeoJson = null;
+let cachedVesselResult = null;
+let cachedVesselTime = 0;
+let inFlightVesselRequest = null;
 
 /* ---------------- API Route ---------------- */
 
@@ -17,16 +22,23 @@ export async function GET(request) {
     const startTime = searchParams.get("startTime");
     const endTime = searchParams.get("endTime");
 
+    console.log("[API] /vessels request", { startTime, endTime });
+
     if (!startTime || !endTime) {
       return Response.json(
         { error: "Missing startTime or endTime query parameters" },
         { status: 400 }
       );
     }
-    const geojsonPath = path.join(process.cwd(), "data", "mpa_geojsons", "test_mpa.json");    // TODO: externalize this to query param when we have multiple MPAs
-    const regionGeoJson = JSON.parse(
-      fs.readFileSync(geojsonPath, "utf8")
-    );
+    if (!cachedGeoJson) {
+      const geojsonPath = path.join(
+        process.cwd(),
+        "data",
+        "mpa_geojsons",
+        "test_mpa.json"
+      ); // TODO: externalize this to query param when we have multiple MPAs
+      cachedGeoJson = JSON.parse(fs.readFileSync(geojsonPath, "utf8"));
+    }
 
     const api_token = process.env.GFW_API_TOKEN;
     if (!api_token) {
@@ -34,26 +46,50 @@ export async function GET(request) {
     }
 
     // Fetch vessels present in MPA for specified time range from GFW 4Wings API
-    const vesselsByDataset = await fetchVessels(
-      startTime,
-      endTime,
-      regionGeoJson,
-      api_token
-    );
+    const now = Date.now();
+    if (cachedVesselResult && now - cachedVesselTime < VESSEL_CACHE_TTL_MS) {
+      console.log("[API] /vessels cached response", {
+        datasets: Object.keys(vesselsByDataset).length,
+        totalVessels,
+        sampleVessel,
+        });
+      return Response.json(cachedVesselResult);
+    }
 
-    return Response.json(vesselsByDataset);
-    /*
+    if (!inFlightVesselRequest) {
+      inFlightVesselRequest = fetchVessels(
+        startTime,
+        endTime,
+        cachedGeoJson,
+        api_token
+      )
+        .then((result) => {
+          cachedVesselResult = result;
+          cachedVesselTime = Date.now();
+          return result;
+        })
+        .finally(() => {
+          inFlightVesselRequest = null;
+        });
+    }
+
+    const vesselsByDataset = await inFlightVesselRequest;
+
     const totalVessels = Object.values(vesselsByDataset)
       .reduce((sum, arr) => sum + arr.length, 0);
+    const sampleVessel = Object.values(vesselsByDataset)
+      .find((arr) => Array.isArray(arr) && arr.length > 0)?.[0] || null;
 
-    return Response.json({
-      startTime,
-      endTime,
+    console.log("[API] /vessels response", {
+      datasets: Object.keys(vesselsByDataset).length,
       totalVessels,
-      vessels: vesselsByDataset
+      sampleVessel,
     });
-    */
+
+    return Response.json(vesselsByDataset);
+
   } catch (err) {
+    console.error("[API] /vessels error", { message: err.message });
     return Response.json(
       { error: err.message },
       { status: 500 }
@@ -71,7 +107,7 @@ async function fetchVessels(startIso, endIso, regionGeoJson, token) {
   const params = new URLSearchParams({
     format: "JSON",
     "group-by": "VESSEL_ID",
-    "temporal-resolution": "HOURLY",
+    "temporal-resolution": "ENTIRE",
     "datasets[0]": "public-global-presence:latest",
     // "datasets[1]": "public-global-sar-presence:latest",  // Uncomment to include SAR presence data (Imagery and ML-based)
     "date-range": `${startIso},${endIso}`,
@@ -94,6 +130,7 @@ async function fetchVessels(startIso, endIso, regionGeoJson, token) {
 
   if (!response.ok) {
     const text = await response.text();
+    console.error("[API] GFW error", { status: response.status, text });
     throw new Error(`GFW error ${response.status}: ${text}`);
   }
 

@@ -2,15 +2,20 @@
 
 import { useMemo, useState } from "react";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 8;  // Maximum number of vessels to show per page
 
 export default function VesselTable({ vessels }) {
   const [page, setPage] = useState(1);
   const totalPages = Math.max(1, Math.ceil(vessels.length / PAGE_SIZE));
 
   const currentRows = useMemo(() => {
+    const sorted = [...vessels].sort((a, b) => {
+      const aHours = typeof a.hours === "number" ? a.hours : -1;
+      const bHours = typeof b.hours === "number" ? b.hours : -1;
+      return bHours - aHours;
+    });
     const start = (page - 1) * PAGE_SIZE;
-    return vessels.slice(start, start + PAGE_SIZE);
+    return sorted.slice(start, start + PAGE_SIZE);
   }, [page, vessels]);
 
   const canPrev = page > 1;
@@ -23,6 +28,8 @@ export default function VesselTable({ vessels }) {
           <tr>
             <th>Name</th>
             <th>Country</th>
+            <th>Hours</th>
+            <th>Type</th>
           </tr>
         </thead>
         <tbody>
@@ -30,6 +37,8 @@ export default function VesselTable({ vessels }) {
             <tr key={`${vessel.name}-${vessel.country}`}>
               <td>{vessel.name}</td>
               <td>{vessel.country}</td>
+              <td>{vessel.hours ?? "-"}</td>
+              <td>{vessel.vesselType || "-"}</td>
             </tr>
           ))}
         </tbody>
