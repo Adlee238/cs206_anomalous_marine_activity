@@ -1,0 +1,45 @@
+{
+  "type": "FeatureCollection",
+  "name": "Clarion-Clipperton Zone Preservation Reference Area 7",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "SITE_ID": "AIHSMA23"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -140.74531089999994,
+              6.4886439
+            ],
+            [
+              -140.74531089999994,
+              2.891355900000121
+            ],
+            [
+              -144.35468890000004,
+              2.891355900000121
+            ],
+            [
+              -144.35468890000004,
+              6.4886439
+            ],
+            [
+              -140.74531089999994,
+              6.4886439
+            ]
+          ]
+        ]
+      }
+    }
+  ],
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "type": "FeatureCollection",
+  "name": "GFCM Fisheries Restricted Areas - Deep Sea Closures",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "SITE_ID": "AIHSMA40b"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": []
+      }
+    }
+  ],
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  }
+}

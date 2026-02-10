@@ -1,0 +1,22 @@
+{
+  "type": "FeatureCollection",
+  "name": "Baltic Sea Special Area",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "SITE_ID": "AIHSMA5"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": []
+      }
+    }
+  ],
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "type": "FeatureCollection",
+  "name": "Milne Seamount Complex Marine Protected Area",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "SITE_ID": "AIOSPAR3"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -41.22036132799997,
+              45.297441406000075
+            ],
+            [
+              -39.1,
+              45.29744140500003
+            ],
+            [
+              -39.1,
+              44.17683593700008
+            ],
+            [
+              -41.22036132799997,
+              44.17683593700008
+            ],
+            [
+              -41.22036132899995,
+              45.193199037000056
+            ],
+            [
+              -41.22036132799997,
+              45.297441406000075
+            ]
+          ]
+        ]
+      }
+    }
+  ],
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  }
+}

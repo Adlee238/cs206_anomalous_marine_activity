@@ -1,0 +1,49 @@
+{
+  "type": "FeatureCollection",
+  "name": "Antialtair Seamount High Seas Marine Protected Area",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "SITE_ID": "AIOSPAR6"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -22.779999998999983,
+              43.82
+            ],
+            [
+              -22.099999998999976,
+              43.82
+            ],
+            [
+              -22.1,
+              43.36
+            ],
+            [
+              -22.779999998999983,
+              43.36
+            ],
+            [
+              -22.779999998999983,
+              43.81011718800005
+            ],
+            [
+              -22.779999998999983,
+              43.82
+            ]
+          ]
+        ]
+      }
+    }
+  ],
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  }
+}

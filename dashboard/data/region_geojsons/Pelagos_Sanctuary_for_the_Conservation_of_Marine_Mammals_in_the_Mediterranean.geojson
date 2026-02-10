@@ -1,0 +1,22 @@
+{
+  "type": "FeatureCollection",
+  "name": "Pelagos Sanctuary for the Conservation of Marine Mammals in the Mediterranean",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "SITE_ID": "AIHSMA42"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": []
+      }
+    }
+  ],
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  }
+}

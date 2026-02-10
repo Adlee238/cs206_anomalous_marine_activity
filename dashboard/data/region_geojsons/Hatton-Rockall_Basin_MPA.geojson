@@ -1,0 +1,49 @@
+{
+  "type": "FeatureCollection",
+  "name": "Hatton-Rockall Basin MPA",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "SITE_ID": "AIHSMA30"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -16.648,
+              57.85
+            ],
+            [
+              -16.648,
+              58.25
+            ],
+            [
+              -16.149999971999932,
+              58.249999999000124
+            ],
+            [
+              -16.140762847999923,
+              57.930063840000116
+            ],
+            [
+              -16.184386417999974,
+              57.88343751500011
+            ],
+            [
+              -16.648,
+              57.85
+            ]
+          ]
+        ]
+      }
+    }
+  ],
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  }
+}
