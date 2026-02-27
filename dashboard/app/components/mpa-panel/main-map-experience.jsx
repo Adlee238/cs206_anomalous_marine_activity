@@ -167,7 +167,9 @@ export default function MainMapExperience({ northPaths, records, deepDiveData })
           </div>
 
           <div className="panel-body">
-            {activeTab === "summary" ? <SummaryTab riskSummary={riskSummary} /> : null}
+            {activeTab === "summary" ? (
+              <SummaryTab riskSummary={riskSummary} records={records} />
+            ) : null}
 
             {activeTab === "vessel-details" ? (
               <VesselDetailsTab

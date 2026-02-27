@@ -1,4 +1,49 @@
 import { getRiskRowClass } from "../../../lib/mpa-viewer";
+import { VIOLATION_TYPE_DESCRIPTIONS, parseViolationTypes } from "../../../lib/violation-types";
+import Tooltip from "../ui/tooltip";
+
+const HEADER_LABELS = {
+  vessel_name: "Vessel Name",
+  flag: "Flag",
+  total_violations: "Number of Violations",
+  violation_types: "Violation Types"
+};
+
+function getHeaderLabel(header) {
+  return HEADER_LABELS[header] || header;
+}
+
+function getHeaderTooltip(header) {
+  if (header === "vessel_name") {
+    return "Registered vessel name.";
+  }
+  if (header === "flag") {
+    return "Country where the vessel is registered.";
+  }
+  if (header === "total_violations") {
+    return "Number of detected violation events for the vessel.";
+  }
+  if (header === "violation_types") {
+    return (
+      <>
+        Types of violations the vessel was detected with. Possible categories include:
+        <br />
+        {Object.entries(VIOLATION_TYPE_DESCRIPTIONS).map(([type, description], index) => (
+          <span key={type}>
+            {index > 0 ? <br /> : null}
+            <strong>{type}</strong>: {description}
+          </span>
+        ))}
+      </>
+    );
+  }
+  return null;
+}
+
+function formatViolationTypes(value) {
+  const types = parseViolationTypes(value);
+  return types.length ? types.join(", ") : "None";
+}
 
 export default function VesselTableView({
   visibleHeaders,
@@ -11,31 +56,8 @@ export default function VesselTableView({
   return (
     <>
       <p className="activity-intro">
-        For this region, the following vessels were detected in the provided time range. Click on a vessel to see more details.
+        For this region, the following vessels were detected in the provided time range. Each entry is colored based on its risk level. Click on a vessel to see more details.
       </p>
-
-      <ul className="column-guide">
-        <li>
-          <strong>vessel_name</strong>: Registered vessel name.
-        </li>
-        <li>
-          <strong>flag</strong>: Country where the vessel is registered.
-        </li>
-        <li>
-          <strong>gear_type</strong>: Main fishing method used.
-        </li>
-        <li>
-          <strong>composite_risk_score</strong>: Overall concern score where higher means more
-          suspicious behavior.
-        </li>
-        <li>
-          <strong>total_violations</strong>: Number of detected violation events for the vessel.
-        </li>
-        <li>
-          <strong>violation_types</strong>: Categories of behavior detected (for example dark
-          periods or zone violations).
-        </li>
-      </ul>
 
       <section className="table-wrap">
         <table>
@@ -43,11 +65,23 @@ export default function VesselTableView({
             <tr>
               {visibleHeaders.map((header) => {
                 const arrow = sortBy === header ? (order === "asc" ? " ▲" : " ▼") : "";
+                const headerLabel = getHeaderLabel(header);
+                const headerTooltip = getHeaderTooltip(header);
                 return (
                   <th key={header}>
-                    <button type="button" className="table-sort-btn" onClick={() => onSort(header)}>
-                      {header + arrow}
-                    </button>
+                    <span className="table-header-cell">
+                      <button type="button" className="table-sort-btn" onClick={() => onSort(header)}>
+                        {headerLabel + arrow}
+                      </button>
+                      {headerTooltip ? (
+                        <Tooltip
+                          ariaLabel={`About ${headerLabel}`}
+                          variant="superscript"
+                          placement="bottom"
+                          content={headerTooltip}
+                        />
+                      ) : null}
+                    </span>
                   </th>
                 );
               })}
@@ -61,7 +95,13 @@ export default function VesselTableView({
                 onClick={() => onSelectVessel(row)}
               >
                 {visibleHeaders.map((header) => (
-                  <td key={`${index}-${header}`}>{row[header]}</td>
+                  <td key={`${index}-${header}`}>
+                    {header === "violation_types" ? (
+                      formatViolationTypes(row[header])
+                    ) : (
+                      row[header]
+                    )}
+                  </td>
                 ))}
               </tr>
             ))}

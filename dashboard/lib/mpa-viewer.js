@@ -2,8 +2,8 @@ export const MAX_ROWS = 200;
 export const DISPLAY_COLUMNS = [
   "vessel_name",
   "flag",
-  "gear_type",
-  "composite_risk_score",
+  //"gear_type",
+  //"composite_risk_score",
   "total_violations",
   "violation_types"
 ];
