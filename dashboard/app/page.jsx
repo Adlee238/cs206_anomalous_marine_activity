@@ -3,8 +3,19 @@ import path from "node:path";
 import MainMapExperience from "./components/mpa-panel/main-map-experience";
 import { listCsvFiles, loadCsvData } from "../lib/data";
 
-function normalizeName(value) {
-  return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+function normalizeMmsi(value) {
+  const raw = String(value || "").trim();
+  if (!raw) {
+    return "";
+  }
+
+  // Accept both plain MMSI strings and values serialized as numeric CSV fields (e.g. "273250200.0").
+  const numeric = Number(raw);
+  if (!Number.isNaN(numeric)) {
+    return String(Math.trunc(numeric));
+  }
+
+  return raw.replace(/[^0-9]/g, "");
 }
 
 async function loadDeepDiveIndex() {
@@ -12,7 +23,7 @@ async function loadDeepDiveIndex() {
   const grouped = new Map();
 
   for (const file of files) {
-    const match = file.match(/^([^/]+)\/(identity|visits|violations|dark_events)\.csv$/i);
+    const match = file.match(/^([^/]+)\/(identity|visits|violations|dark_events|deepdive)\.csv$/i);
     if (!match) {
       continue;
     }
@@ -25,18 +36,35 @@ async function loadDeepDiveIndex() {
     grouped.get(vesselSlug)[part] = file;
   }
 
-  const byName = {};
   const byMmsi = {};
 
   for (const [vesselSlug, parts] of grouped.entries()) {
-    const [identityData, visitsData, violationsData, darkEventsData] = await Promise.all([
+    const [identityData, visitsData, violationsData, darkEventsData, deepDiveData] = await Promise.all([
       parts.identity ? loadCsvData("vessel_reports", parts.identity, "", "asc") : Promise.resolve({ records: [] }),
       parts.visits ? loadCsvData("vessel_reports", parts.visits, "", "asc") : Promise.resolve({ records: [] }),
       parts.violations ? loadCsvData("vessel_reports", parts.violations, "", "asc") : Promise.resolve({ records: [] }),
-      parts.dark_events ? loadCsvData("vessel_reports", parts.dark_events, "", "asc") : Promise.resolve({ records: [] })
+      parts.dark_events ? loadCsvData("vessel_reports", parts.dark_events, "", "asc") : Promise.resolve({ records: [] }),
+      parts.deepdive ? loadCsvData("vessel_reports", parts.deepdive, "", "asc") : Promise.resolve({ records: [] })
     ]);
 
-    const identity = identityData.records[0] || null;
+    const deepDiveSummary = deepDiveData.records[0] || null;
+    const identity =
+      identityData.records[0] || (deepDiveSummary
+        ? {
+            mmsi: deepDiveSummary.mmsi || "",
+            imo: "",
+            vessel_name: deepDiveSummary.vessel_name || "",
+            flag: deepDiveSummary.flag || "",
+            vessel_type: deepDiveSummary.vessel_type || "",
+            length_m: "",
+            vessel_age_years: deepDiveSummary.vessel_age_years || "",
+            gear_type: "",
+            owner: "",
+            operator: "",
+            first_seen: deepDiveSummary.first_seen || "",
+            last_seen: deepDiveSummary.last_seen || ""
+          }
+        : null);
     const record = {
       identity,
       visits: visitsData.records,
@@ -44,18 +72,13 @@ async function loadDeepDiveIndex() {
       darkEvents: darkEventsData.records
     };
 
-    const nameKey = normalizeName(identity?.vessel_name || vesselSlug);
-    if (nameKey) {
-      byName[nameKey] = record;
-    }
-
-    const mmsiKey = identity?.mmsi ? String(identity.mmsi) : "";
+    const mmsiKey = normalizeMmsi(identity?.mmsi);
     if (mmsiKey) {
       byMmsi[mmsiKey] = record;
     }
   }
 
-  return { byName, byMmsi };
+  return { byMmsi };
 }
 
 async function loadMpaRegions() {

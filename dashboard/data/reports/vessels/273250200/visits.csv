@@ -1,0 +1,2 @@
+mpa_name,entry_time,exit_time,duration_hours,avg_speed_knots,max_speed_knots,fishing_detected,dark_periods_detected
+North Atlantic Current and Evlanov Sea Basin MPA,2024-01-01 00:00:00,2024-11-26 07:30:00,367.5,0.0,0.0,True,True

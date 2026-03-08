@@ -2,7 +2,7 @@ export const TOOLTIP_CONTENT = {
   mmsi:
     "A Maritime Mobile Service Identity (MMSI) is a unique 9-digit number assigned to each vessel for identifying it in digital, radio, and AIS communications.",
   darkActivity:
-    "Dark activity refers to periods in which a vessel turns off its Automatic Identification System (AIS) transponders. This allows it to hide its location and activities from public surveillance.",
+    "Dark activity refers to periods longer than 6 hours when we could not detect a vessel. This may happen because its AIS tracker was turned off, or because detection coverage/equipment was insufficient in that area.",
   detectionRisk:
     "Upon detection of a vessel, we determine the risk it poses to the region based on the severity of suspicious behavior it may be engaging in: Low, Medium, High, or Critical. For instance, if a ship is thought to be fishing for a long period in an area that prohibits fishing, the risk level is automatically high.",
   riskSignals: {
@@ -50,7 +50,7 @@ export const TOOLTIP_CONTENT = {
     gearType:
       "Gear Type indicates the method of fishing used by the ship to catch different species and/ or quantities of fish. Certain gear types are often prohibited in MPAs.",
     visitDurationHours:
-      "If a ship spends more time than most other boats in an MPA investigate further. The more time a ship is spending in an MPA, the more likely it is fishing (a slow activity).",
+      "If a ship spends more time than most other boats in an MPA investigate further. The more time a ship is spending in an MPA, the more likely it is fishing (a slow activity). Note that this parameter excludes AIS-off hours (dark activity).",
     averageSpeedKnots:
       "Ships moving at 2-6 knots indicate higher risk of illegal activity (fishing, idling and the transfer of illegal goods or ballast water exchange)."
   },

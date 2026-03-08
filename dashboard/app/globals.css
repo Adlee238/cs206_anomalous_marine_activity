@@ -581,6 +581,10 @@ body {
   background: #ffffff;
 }
 
+.violation-detail-table-wrap.no-scroll {
+  overflow-x: visible;
+}
+
 .violation-detail-table {
   width: 100%;
   border-collapse: collapse;

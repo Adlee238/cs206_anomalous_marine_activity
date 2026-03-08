@@ -1,7 +1,10 @@
+import { useEffect, useMemo, useState } from "react";
 import Tooltip from "../ui/tooltip";
 import ViolationTypeTags from "./violation-type-tags";
-import { VIOLATION_TYPE_DESCRIPTIONS, getViolationTypeDescription } from "../../../lib/violation-types";
+import { VIOLATION_TYPE_DESCRIPTIONS } from "../../../lib/violation-types";
 import { TOOLTIP_CONTENT } from "../../../lib/tooltip-content";
+
+const DETAIL_ROWS_PER_PAGE = 10;
 
 function formatTimestamp(value) {
   const text = String(value || "").trim();
@@ -108,8 +111,18 @@ function preferDeep(deepValue, fallbackValue) {
   return isMissing(deepValue) ? fallbackValue : deepValue;
 }
 
-function normalizeName(value) {
-  return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+function normalizeMmsi(value) {
+  const raw = String(value || "").trim();
+  if (!raw) {
+    return "";
+  }
+
+  const numeric = Number(raw);
+  if (!Number.isNaN(numeric)) {
+    return String(Math.trunc(numeric));
+  }
+
+  return raw.replace(/[^0-9]/g, "");
 }
 
 function toTimestamp(value) {
@@ -121,11 +134,76 @@ function sortByTimestamp(rows, field) {
   return [...rows].sort((a, b) => toTimestamp(a[field]) - toTimestamp(b[field]));
 }
 
+function PaginatedDetailTable({ rows, columns, rowKeyPrefix, scrollable = true }) {
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(rows.length / DETAIL_ROWS_PER_PAGE));
+  const pagedRows = useMemo(() => {
+    const start = (page - 1) * DETAIL_ROWS_PER_PAGE;
+    return rows.slice(start, start + DETAIL_ROWS_PER_PAGE);
+  }, [page, rows]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [rows.length, rowKeyPrefix]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
+  return (
+    <>
+      <section className={`violation-detail-table-wrap${scrollable ? "" : " no-scroll"}`}>
+        <table className="violation-detail-table">
+          <thead>
+            <tr>
+              {columns.map((column) => (
+                <th key={column.key}>{column.header}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {pagedRows.map((row, index) => (
+              <tr key={`${rowKeyPrefix}-${(page - 1) * DETAIL_ROWS_PER_PAGE + index}`}>
+                {columns.map((column) => (
+                  <td key={`${rowKeyPrefix}-${column.key}-${(page - 1) * DETAIL_ROWS_PER_PAGE + index}`}>
+                    {column.render(row)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+      <div className="table-pagination">
+        <button
+          type="button"
+          className="table-page-btn"
+          onClick={() => setPage((current) => Math.max(1, current - 1))}
+          disabled={page <= 1}
+        >
+          Previous
+        </button>
+        <span className="table-page-status">
+          Page {page} of {totalPages}
+        </span>
+        <button
+          type="button"
+          className="table-page-btn"
+          onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+          disabled={page >= totalPages}
+        >
+          Next
+        </button>
+      </div>
+    </>
+  );
+}
+
 export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
-  const mmsiKey = vessel?.mmsi ? String(vessel.mmsi) : "";
-  const nameKey = normalizeName(vessel?.vessel_name);
-  const matchedDive =
-    (mmsiKey && deepDiveData?.byMmsi?.[mmsiKey]) || deepDiveData?.byName?.[nameKey] || null;
+  const mmsiKey = normalizeMmsi(vessel?.mmsi);
+  const matchedDive = (mmsiKey && deepDiveData?.byMmsi?.[mmsiKey]) || null;
   const identity = matchedDive?.identity || null;
   const hasDeepDive = Boolean(matchedDive);
 
@@ -155,6 +233,7 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
   const resolvedType = preferDeep(identity?.vessel_type, vessel.vessel_type);
   const resolvedGear = preferDeep(identity?.gear_type, vessel.gear_type);
   const resolvedLength = preferDeep(identity?.length_m, vessel.length_m);
+  const resolvedAgeYears = preferDeep(identity?.vessel_age_years, vessel.vessel_age_years);
 
   const resolvedVisits = parseNumber(
     preferDeep(hasDeepDive ? deepDiveVisits.length : null, vessel.total_visits)
@@ -162,6 +241,33 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
   const resolvedHours = parseNumber(
     preferDeep(hasDeepDive ? deepDiveVisitHours : null, vessel.total_hours_in_mpa)
   );
+  const deepDiveMeanVisitSpeedKnots =
+    sortedDeepDiveVisits.length > 0
+      ? sortedDeepDiveVisits.reduce((sum, row) => sum + parseNumber(row.avg_speed_knots), 0) /
+        sortedDeepDiveVisits.length
+      : null;
+  const deepDiveMaxVisitSpeedKnots =
+    sortedDeepDiveVisits.length > 0
+      ? Math.max(...sortedDeepDiveVisits.map((row) => parseNumber(row.max_speed_knots)))
+      : null;
+  const fallbackMeanVisitSpeedKnots = isMissing(vessel.mean_speed_knots)
+    ? null
+    : Number(vessel.mean_speed_knots);
+  const fallbackMaxVisitSpeedKnots = isMissing(vessel.max_speed_knots)
+    ? null
+    : Number(vessel.max_speed_knots);
+  const resolvedMeanVisitSpeedKnots =
+    hasDeepDive && deepDiveMeanVisitSpeedKnots !== null ? deepDiveMeanVisitSpeedKnots : fallbackMeanVisitSpeedKnots;
+  const resolvedMaxVisitSpeedKnots =
+    hasDeepDive && deepDiveMaxVisitSpeedKnots !== null ? deepDiveMaxVisitSpeedKnots : fallbackMaxVisitSpeedKnots;
+  const meanVisitSpeedText =
+    Number.isFinite(resolvedMeanVisitSpeedKnots)
+      ? `${resolvedMeanVisitSpeedKnots.toFixed(1)} knots`
+      : "Unavailable";
+  const maxVisitSpeedText =
+    Number.isFinite(resolvedMaxVisitSpeedKnots)
+      ? `${resolvedMaxVisitSpeedKnots.toFixed(1)} knots`
+      : "Unavailable";
   const resolvedSuspiciousActivityCount = parseNumber(
     preferDeep(hasDeepDive ? deepDiveSuspiciousActivities.length : null, vessel.total_violations)
   );
@@ -176,6 +282,23 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
   const resolvedDarkHours = parseNumber(
     preferDeep(hasDeepDive ? deepDiveDarkHours : null, vessel.total_gap_hours)
   );
+  const deepDiveDarkDurations = deepDiveDarkEvents.map((row) => parseNumber(row.gap_duration_hours));
+  const deepDiveAvgDarkGapHours =
+    deepDiveDarkDurations.length > 0
+      ? deepDiveDarkDurations.reduce((sum, value) => sum + value, 0) / deepDiveDarkDurations.length
+      : null;
+  const deepDiveMaxDarkGapHours =
+    deepDiveDarkDurations.length > 0 ? Math.max(...deepDiveDarkDurations) : null;
+  const hasDarkMetrics = hasDeepDive && deepDiveDarkDurations.length > 0;
+  const darkTotalHoursText = hasDarkMetrics ? `${resolvedDarkHours.toFixed(1)} hours` : "Unavailable";
+  const darkAvgGapText =
+    hasDarkMetrics && deepDiveAvgDarkGapHours !== null
+      ? `${deepDiveAvgDarkGapHours.toFixed(1)} hours`
+      : "Unavailable";
+  const darkMaxGapText =
+    hasDarkMetrics && deepDiveMaxDarkGapHours !== null
+      ? `${deepDiveMaxDarkGapHours.toFixed(1)} hours`
+      : "Unavailable";
 
   const risk = String(vessel.risk_category || "").toUpperCase();
 
@@ -188,53 +311,91 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
           ? `This vessel is in the medium-risk tier.`
           : `This vessel is currently in the low-risk tier.`;
 
-  const visitsSentence = `This vessel made ${resolvedVisits} visit${resolvedVisits === 1 ? "" : "s"} to this region in the selected time period. In total, it spent ${resolvedHours.toFixed(1)} hours in this region.`;
+  const visitsSummaryNode = (
+    <ul className="detail-bullets">
+      <li className="detail-bullet-item">
+        This vessel made {resolvedVisits} visit{resolvedVisits === 1 ? "" : "s"} to this region in the
+        selected time period.
+      </li>
+      <li className="detail-bullet-item">
+        In total, it spent {resolvedHours.toFixed(1)} hours
+        <Tooltip
+          ariaLabel="What tracked hours include"
+          variant="superscript"
+          content={TOOLTIP_CONTENT.specificVessel.visitDurationHours}
+        />{" "}
+        in this region.
+      </li>
+      <li className="detail-bullet-item">Overall, its average speed
+        <Tooltip
+          ariaLabel="What tracked hours include"
+          variant="superscript"
+          content={TOOLTIP_CONTENT.specificVessel.averageSpeedKnots}
+        />{" "}
+         was {meanVisitSpeedText}.</li>
+      <li className="detail-bullet-item">Overall, its maximum detected speed was {maxVisitSpeedText}.</li>
+    </ul>
+  );
+  const visitColumns = [
+    {
+      key: "entry_time",
+      header: "Entry Time",
+      render: (row) => toDisplayValue(row.entry_time)
+    },
+    {
+      key: "exit_time",
+      header: "Exit Time",
+      render: (row) => toDisplayValue(row.exit_time)
+    },
+    {
+      key: "duration_hours",
+      header: (
+        <span className="table-header-cell">
+          Duration (Hours)
+          <Tooltip
+            ariaLabel="Why visit duration matters"
+            variant="superscript"
+            placement="bottom"
+            content={TOOLTIP_CONTENT.specificVessel.visitDurationHours}
+          />
+        </span>
+      ),
+      render: (row) => toDisplayValue(row.duration_hours)
+    },
+    {
+      key: "avg_speed_knots",
+      header: (
+        <span className="table-header-cell">
+          Average Speed (knots)
+          <Tooltip
+            ariaLabel="Why average speed matters"
+            variant="superscript"
+            placement="bottom"
+            content={TOOLTIP_CONTENT.specificVessel.averageSpeedKnots}
+          />
+        </span>
+      ),
+      render: (row) => toDisplayValue(row.avg_speed_knots)
+    },
+    {
+      key: "fishing_detected",
+      header: "Fishing Detected",
+      render: (row) => toDisplayValue(row.fishing_detected)
+    },
+    {
+      key: "dark_periods_detected",
+      header: "Dark Activity Detected",
+      render: (row) => toDisplayValue(row.dark_periods_detected)
+    }
+  ];
   const visitsTableNode =
     hasDeepDive && sortedDeepDiveVisits.length > 0 ? (
-      <section className="violation-detail-table-wrap">
-        <table className="violation-detail-table">
-            <thead>
-              <tr>
-                <th>Entry Time</th>
-                <th>Exit Time</th>
-                <th>
-                  <span className="table-header-cell">
-                    Duration (Hours)
-                    <Tooltip
-                      ariaLabel="Why visit duration matters"
-                      variant="superscript"
-                      placement="bottom"
-                      content={TOOLTIP_CONTENT.specificVessel.visitDurationHours}
-                    />
-                  </span>
-                </th>
-                <th>
-                  <span className="table-header-cell">
-                    Average Speed (knots)
-                    <Tooltip
-                      ariaLabel="Why average speed matters"
-                      variant="superscript"
-                      placement="bottom"
-                      content={TOOLTIP_CONTENT.specificVessel.averageSpeedKnots}
-                    />
-                  </span>
-                </th>
-                <th>Fishing Detected</th>
-              </tr>
-            </thead>
-          <tbody>
-            {sortedDeepDiveVisits.map((row, index) => (
-              <tr key={`visit-${index}`}>
-                <td>{toDisplayValue(row.entry_time)}</td>
-                <td>{toDisplayValue(row.exit_time)}</td>
-                <td>{toDisplayValue(row.duration_hours)}</td>
-                <td>{toDisplayValue(row.avg_speed_knots)}</td>
-                <td>{toDisplayValue(row.fishing_detected)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+      <PaginatedDetailTable
+        rows={sortedDeepDiveVisits}
+        columns={visitColumns}
+        rowKeyPrefix="visit"
+        scrollable={false}
+      />
     ) : (
       <p className="detail-section-note">
         Detailed per-visit records are not available for this vessel.
@@ -253,38 +414,25 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
       ) : null}
     </>
   );
+  const suspiciousColumns = [
+    {
+      key: "detection_date",
+      header: "Detection Date",
+      render: (row) => getDetectionTimestamp(row.start_time, row.end_time)
+    },
+    {
+      key: "violation_type",
+      header: "Suspicious Activity",
+      render: (row) => toDisplayValue(row.violation_type)
+    }
+  ];
   const suspiciousActivityTableNode =
     hasDeepDive && sortedDeepDiveSuspiciousActivities.length > 0 ? (
-      <section className="violation-detail-table-wrap">
-        <table className="violation-detail-table">
-          <thead>
-            <tr>
-              <th>Detection Date</th>
-              <th>Suspicious Activity</th>
-              <th>Verified</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedDeepDiveSuspiciousActivities.map((row, index) => (
-              <tr key={`violation-${index}`}>
-                <td>{getDetectionTimestamp(row.start_time, row.end_time)}</td>
-                <td>
-                  <span className="violation-type-inline">
-                    <span>{toDisplayValue(row.violation_type)}</span>
-                    <Tooltip
-                      ariaLabel={`What does ${row.violation_type} mean?`}
-                      variant="superscript"
-                      placement="top"
-                      content={getViolationTypeDescription(String(row.violation_type || "").trim())}
-                    />
-                  </span>
-                </td>
-                <td>{toDisplayValue(row.verified)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+      <PaginatedDetailTable
+        rows={sortedDeepDiveSuspiciousActivities}
+        columns={suspiciousColumns}
+        rowKeyPrefix="violation"
+      />
     ) : (
       <p className="detail-section-note">
         Detailed per-suspicious-activity records are not available for this vessel.
@@ -302,35 +450,48 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
   );
   const darkSentence = (
     <>
-      There {resolvedDarkEvents === 1 ? "was 1 period" : `were ${resolvedDarkEvents} periods`} in
-      which the vessel exhibited {darkActivityTermNode}. In total, it had {" "}
-      {resolvedDarkHours.toFixed(1)} hours where its "went dark."
+      There {resolvedDarkEvents === 1 ? "was 1 gap" : `were ${resolvedDarkEvents} gaps`} in
+      which the vessel exhibited {darkActivityTermNode}.
     </>
   );
+  const darkSummaryNode = (
+    <ul className="detail-bullets">
+      <li className="detail-bullet-item">{darkSentence}</li>
+      <li className="detail-bullet-item">
+        The vessel was off-the-grid for a total of {darkTotalHoursText}.
+      </li>
+      <li className="detail-bullet-item">
+        The average gap duration was {darkAvgGapText}.
+      </li>
+      <li className="detail-bullet-item">
+        The longest gap duration was {darkMaxGapText}.
+      </li>
+    </ul>
+  );
+  const darkColumns = [
+    {
+      key: "gap_start_time",
+      header: "Gap Start Time",
+      render: (row) => toDisplayValue(row.gap_start_time)
+    },
+    {
+      key: "gap_end_time",
+      header: "Gap End Time",
+      render: (row) => toDisplayValue(row.gap_end_time)
+    },
+    {
+      key: "gap_duration_hours",
+      header: "Gap Duration (Hours)",
+      render: (row) => toDisplayValue(row.gap_duration_hours)
+    }
+  ];
   const darkTableNode =
     hasDeepDive && sortedDeepDiveDarkEvents.length > 0 ? (
-      <section className="violation-detail-table-wrap">
-        <table className="violation-detail-table">
-          <thead>
-            <tr>
-              <th>Gap Start Time</th>
-              <th>Gap End Time</th>
-              <th>Gap Duration (Hours)</th>
-              <th>Gap Happened in Region</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedDeepDiveDarkEvents.map((row, index) => (
-              <tr key={`dark-event-${index}`}>
-                <td>{toDisplayValue(row.gap_start_time)}</td>
-                <td>{toDisplayValue(row.gap_end_time)}</td>
-                <td>{toDisplayValue(row.gap_duration_hours)}</td>
-                <td>{toDisplayValue(row.in_mpa)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+      <PaginatedDetailTable
+        rows={sortedDeepDiveDarkEvents}
+        columns={darkColumns}
+        rowKeyPrefix="dark-event"
+      />
     ) : (
       <p className="detail-section-note">
         Detailed per-event dark activity records are not available for this vessel.
@@ -350,15 +511,14 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
           ? [
               field("Owner", identity?.owner),
               field("Operator", identity?.operator),
-              field("Tonnage", identity?.tonnage),
-              field("Engine Power (kW)", identity?.engine_power_kw)
+              field("Age (Years)", resolvedAgeYears)
             ]
           : [])
       ]
     },
     {
       title: "Visits in This Region",
-      summary: visitsSentence,
+      summaryNode: visitsSummaryNode,
       node: visitsTableNode,
       items: []
     },
@@ -370,7 +530,7 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
     },
     {
       title: "Dark Activity",
-      summary: darkSentence,
+      summaryNode: darkSummaryNode,
       node: darkTableNode,
       items: []
     }
@@ -426,7 +586,11 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
               />
             ) : null}
           </h4>
-          <p className="detail-section-note">{section.summary}</p>
+          {section.summaryNode ? (
+            section.summaryNode
+          ) : (
+            <p className="detail-section-note">{section.summary}</p>
+          )}
           {section.node ? (
             section.node
           ) : (
