@@ -7,9 +7,6 @@ import VesselTableView from "./vessel-table-view";
 export default function VesselDetailsTab({
   visibleHeaders,
   rowsToShow,
-  sortBy,
-  order,
-  onSort,
   deepDiveData
 }) {
   const [selectedVessel, setSelectedVessel] = useState(null);
@@ -28,9 +25,6 @@ export default function VesselDetailsTab({
     <VesselTableView
       visibleHeaders={visibleHeaders}
       rowsToShow={rowsToShow}
-      sortBy={sortBy}
-      order={order}
-      onSort={onSort}
       onSelectVessel={setSelectedVessel}
     />
   );

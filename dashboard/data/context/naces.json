@@ -1,0 +1,185 @@
+{
+  "opener": [
+    { "text": "NACES is " },
+    { "text": "ONE OF THE WORLD'S LARGEST HIGH-SEAS MARINE RESERVES", "mark": "bold" }
+  ],
+  "key_facts": [
+    {
+      "value": "595,000",
+      "unit": "km²",
+      "label": "of protected ocean"
+    },
+    {
+      "value": "5 million",
+      "label": "seabirds using the site each year"
+    },
+    {
+      "value": "2021",
+      "label": "Year designated by OSPAR"
+    }
+  ],
+  "summary": {
+    "the_gist": [
+      { "text": "A patch of open Atlantic ocean the size of France was discovered as a " },
+      { "text": "seabird hotspot", "href": "https://conbio.onlinelibrary.wiley.com/doi/10.1111/conl.12824" },
+      { "text": " in 2021. It is the " },
+      { "text": "largest protected area", "mark": "highlight" },
+      { "text": " in the " },
+      { "text": "OSPAR Network", "href": "https://www.ospar.org/convention/ministerial-statements/ministerial21/deliverables/naces-mpa" },
+      { "text": ". It has no country in charge of it, which means " },
+      { "text": "tracking and regulating harmful fishing practices is extremely difficult", "mark": "highlight" },
+      { "text": ". Still, key species (including many sharks) are impacted by frequent fishing activity in the area." }
+    ],
+    "story_angle": [
+      { "text": "It's the world's biggest MPA—but no one has direct power to stop a fishing boat from entering it. " },
+      { "text": "Regulations that do exist are hard to enforce and track", "mark": "highlight" },
+      { "text": ". Watch for " },
+      { "text": "bottom trawling and longline fishing", "mark": "highlight" },
+      { "text": "." }
+    ]
+  },
+  "location": {
+    "description": [
+      { "text": "In the middle of the North Atlantic, between the Azores, the Grand Banks of Newfoundland, and the Mid-Atlantic Ridge. It is entirely in international waters—" },
+      { "text": "no country owns or controls it.", "mark": "highlight" }
+    ]
+  },
+  "purpose": {
+    "description": [
+      { "text": "Scientists strapped trackers to 2,188 seabirds from 21 species across 56 colonies. The data revealed up to " },
+      { "text": "5 million birds", "mark": "highlight" },
+      { "text": "—including puffins, arctic terns, and kittiwakes—flock to this ocean area each year to feed. It was the largest seabird concentration ever found on the open ocean." },
+      { "mark": "paragraph-break" },
+      { "text": "When researchers looked at the seafloor below, they found " },
+      { "text": "30+ seamounts", "mark": "highlight" },
+      { "text": ", ancient coral gardens, and deep-sea shark nurseries. In 2023, OSPAR expanded protection to cover the seabed too." }
+    ]
+  },
+  "risks": [
+    {
+      "header": "in_the_water",
+      "items": [
+        "Atlantic Puffin, Arctic Tern, Little Auk",
+        "Blue & Fin Whales (endangered)",
+        "Leatherback & Loggerhead Turtles",
+        "Shortfin Mako Shark (endangered)",
+        "Atlantic Bluefin Tuna"
+      ]
+    },
+    {
+      "header": "on_the_seafloor",
+      "items": [
+        "Ancient coral gardens & sponges",
+        "30+ seamounts (underwater mountains)",
+        "Deep-sea shark nurseries",
+        "Rare benthic (bottom-dwelling) ecosystems"
+      ]
+    }
+  ],
+  "restrictions": {
+    "context": [
+      { "text": "Here’s the catch: OSPAR,  the body that designated NACES, doesn’t control fishing or shipping. Those are governed by separate international bodies. So the MPA is a set of conservation objectives and political commitments, not a hard enforcement zone. In practice:" }
+    ],
+    "bullet_points": [
+      [
+        { "text": "Bottom trawling", "mark": "highlight" },
+        { "text": " on seamounts is a major concern and is generally banned in the North Atlantic by the north-East Atlantic fisheries body (NEAFC)" }
+      ],
+      [
+        { "text": "Longline fishing", "mark": "highlight" },
+        { "text": " for tuna and sharks (managed by ICCAT) is flagged as a threat" }
+      ],
+      [
+        { "text": "Seabird, turtle, and shark bycatch is a priority issue across all gear types" }
+      ],
+      [
+        { "text": "Deep-sea mining is handled through a separate body (the International Seabed Authority)" }
+      ],
+      [
+        { "text": "Shipping noise and pollution fall under the International Maritime Organization" }
+      ]
+    ]
+  },
+  "governance": {
+    "agencies": [
+      {
+        "name": "OSPAR Commission",
+        "details": "Designated the MPA. 16 members including the EU. Sets conservation objectives and calls on others to act."
+      },
+      {
+        "name": "NEAFC",
+        "details": "North-East Atlantic fisheries body. OSPAR is asking NEAFC to translate MPA objectives into fishing restrictions."
+      },
+      {
+        "name": "ICCAT",
+        "details": "Manages tuna and sharks in the Atlantic. Key body for addressing longline fishing impacts."
+      },
+      {
+        "name": "International Seabed Authority",
+        "details": "Controls deep-sea mining licences in the Area (seabed beyond national jurisdiction)."
+      }
+    ]
+  },
+  "high_seas_treaty_connection": {
+    "status_update": [
+      { "text": "The High Seas Treaty entered into force on " },
+      { "text": "January 19, 2026", "mark": "bold" },
+      { "text": ". NACES and this treaty are deeply intertwined:" }
+    ],
+    "implications": [
+      [
+        { "text": "NACES was created before the treaty existed" }
+      ],
+      [
+        { "text": "The treaty now gives the global community a proper legal framework to manage places like NACES" }
+      ],
+      [
+        { "text": "NACES is widely seen as the model for what the treaty can achieve at scale — a proof of concept" }
+      ],
+      [
+        { "text": "The big question: will the new treaty give teeth to an MPA that currently relies on voluntary cooperation?", "mark": "highlight" }
+      ]
+    ]
+  },
+  "contacts": [
+    {
+      "name": "Lucy Ritchie",
+      "title": "Communications Lead, OSPAR",
+      "email": "lucy.ritchie@ospar.org"
+    },
+    {
+      "name": "Christopher Sands",
+      "title": "Bird Life International",
+      "email": "Christopher.Sands@birdlife.org"
+    },
+    {
+      "name": "Dustin Cranor",
+      "title": "Oceana",
+      "email": "dcranor@oceana.org"
+    },
+    {
+      "name": "Lee Ann Henry",
+      "title": "Researcher",
+      "work_context": "Navigating a transformative policy route for High Seas conservation",
+      "email": "l.henry@ed.ac.uk"
+    }
+  ],
+  "resources": [
+    {
+      "citation": "OSPAR Decision 2021/01 — original designation",
+      "url": "ospar.org"
+    },
+    {
+      "citation": "OSPAR Decision 2023/01 — expanded to cover seabed",
+      "url": "ospar.org/documents?v=52056"
+    },
+    {
+      "citation": "EU Commission statement, 30 June 2023",
+      "url": "environment.ec.europa.eu"
+    },
+    {
+      "citation": "BBNJ Agreement — entered into force 19 January 2026",
+      "url": "un.org"
+    }
+  ]
+}

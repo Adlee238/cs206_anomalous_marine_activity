@@ -1,0 +1,10 @@
+mpa_id,display_name,report_file,geojson_file,metadata_file
+charlie_gibbs_north,Charlie-Gibbs North High Seas Marine Protected Area,charlie_gibbs_north_sea.csv,Charlie-Gibbs_North_High_Seas_Marine_Protected_Area.geojson,
+naces,North Atlantic Current Evlanov Basin (NACES),naces.csv,North_Atlantic_Current_Evlanov_Basin_NACES.geojson,naces.json
+charlie_gibbs_south,Charlie-Gibbs South High Seas Marine Protected Area,,Charlie-Gibbs_South_High_Seas_Marine_Protected_Area.geojson,
+altair_seamount,Altair Seamount High Seas Marine Protected Area,,Altair_Seamount_High_Seas_Marine_Protected_Area.geojson,
+antialtair_seamount,Antialtair Seamount High Seas Marine Protected Area,,Antialtair_Seamount_High_Seas_Marine_Protected_Area.geojson,
+josephine_seamount,Josephine Seamount High Seas Marine Protected Area,,Josephine_Seamount_High_Seas_Marine_Protected_Area.geojson,
+milne_seamount_complex,Milne Seamount Complex Marine Protected Area,,Milne_Seamount_Complex_Marine_Protected_Area.geojson,
+mid_atlantic_ridge_north_azores,Mid-Atlantic Ridge North of the Azores Marine Protected Area,,Mid-Atlantic_Ridge_North_of_the_Azores_Marine_Protected_Area.geojson,
+hatton_rockall_basin,Hatton-Rockall Basin MPA,,Hatton-Rockall_Basin_MPA.geojson,

@@ -3,39 +3,73 @@ import path from "node:path";
 import { parseCsv } from "./csv";
 
 const DATA_DIRS = {
-  mpa_report: "data/mpa_report",
-  vessel_details: "data/vessel_details"
+  reports: "data/reports",
+  mpa_reports: "data/reports/mpa",
+  vessel_reports: "data/reports/vessels"
 };
 
 function normalizeDirKey(dirKey) {
   if (Object.prototype.hasOwnProperty.call(DATA_DIRS, dirKey)) {
     return dirKey;
   }
-  return "mpa_report";
+  throw new Error(`Unknown data directory key: ${dirKey}`);
 }
 
 export function getDirOptions() {
   return Object.keys(DATA_DIRS);
 }
 
-export async function listCsvFiles(dirKey) {
-  const safeDirKey = normalizeDirKey(dirKey);
-  const folderPath = path.join(process.cwd(), DATA_DIRS[safeDirKey]);
-  const entries = await readdir(folderPath, { withFileTypes: true });
+function toPosixPath(filePath) {
+  return filePath.split(path.sep).join("/");
+}
 
-  return entries
-    .filter((entry) => entry.isFile() && entry.name.toLowerCase().endsWith(".csv"))
-    .map((entry) => entry.name)
-    .sort((a, b) => a.localeCompare(b));
+async function walkCsvFiles(folderPath, recursive, relativePrefix = "") {
+  const entries = await readdir(folderPath, { withFileTypes: true });
+  const files = [];
+
+  for (const entry of entries) {
+    const fullPath = path.join(folderPath, entry.name);
+    const relativePath = relativePrefix ? path.join(relativePrefix, entry.name) : entry.name;
+
+    if (entry.isFile() && entry.name.toLowerCase().endsWith(".csv")) {
+      files.push(toPosixPath(relativePath));
+      continue;
+    }
+
+    if (recursive && entry.isDirectory()) {
+      const nested = await walkCsvFiles(fullPath, true, relativePath);
+      files.push(...nested);
+    }
+  }
+
+  return files;
+}
+
+export async function listCsvFiles(dirKey, options = {}) {
+  const safeDirKey = normalizeDirKey(dirKey);
+  const recursive = Boolean(options.recursive);
+  const folderPath = path.join(process.cwd(), DATA_DIRS[safeDirKey]);
+  const csvFiles = await walkCsvFiles(folderPath, recursive);
+
+  return csvFiles.sort((a, b) => a.localeCompare(b));
 }
 
 function getSafeCsvPath(dirKey, fileName) {
   const safeDirKey = normalizeDirKey(dirKey);
-  const safeName = path.basename(fileName || "");
-  if (!safeName.toLowerCase().endsWith(".csv")) {
+  const basePath = path.join(process.cwd(), DATA_DIRS[safeDirKey]);
+  const normalizedRelative = path.normalize(String(fileName || "")).replace(/^[/\\]+/, "");
+
+  if (!normalizedRelative.toLowerCase().endsWith(".csv")) {
     return null;
   }
-  return path.join(process.cwd(), DATA_DIRS[safeDirKey], safeName);
+
+  const resolvedPath = path.resolve(basePath, normalizedRelative);
+  const inBasePath = resolvedPath === basePath || resolvedPath.startsWith(`${basePath}${path.sep}`);
+  if (!inBasePath) {
+    return null;
+  }
+
+  return resolvedPath;
 }
 
 function compareValues(a, b) {

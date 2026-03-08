@@ -1,6 +1,7 @@
 import Tooltip from "../ui/tooltip";
 import ViolationTypeTags from "./violation-type-tags";
-import { getViolationTypeDescription } from "../../../lib/violation-types";
+import { VIOLATION_TYPE_DESCRIPTIONS, getViolationTypeDescription } from "../../../lib/violation-types";
+import { TOOLTIP_CONTENT } from "../../../lib/tooltip-content";
 
 function formatTimestamp(value) {
   const text = String(value || "").trim();
@@ -37,24 +38,6 @@ function formatTimestamp(value) {
   const paddedHour = String(hour).padStart(2, "0");
   const paddedMinute = String(minute).padStart(2, "0");
   return `${paddedMonth}/${paddedDay}/${year} ${paddedHour}:${paddedMinute}`;
-}
-
-function formatTimestampFromMs(ms) {
-  if (!Number.isFinite(ms)) {
-    return "Not available";
-  }
-
-  const date = new Date(ms);
-  if (Number.isNaN(date.getTime())) {
-    return "Not available";
-  }
-
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const year = String(date.getFullYear());
-  const hour = String(date.getHours()).padStart(2, "0");
-  const minute = String(date.getMinutes()).padStart(2, "0");
-  return `${month}/${day}/${year} ${hour}:${minute}`;
 }
 
 function formatDateFromMs(ms) {
@@ -147,19 +130,23 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
   const hasDeepDive = Boolean(matchedDive);
 
   const deepDiveVisits = hasDeepDive ? matchedDive.visits || [] : [];
-  const deepDiveViolations = hasDeepDive ? matchedDive.violations || [] : [];
+  const deepDiveSuspiciousActivities = hasDeepDive ? matchedDive.violations || [] : [];
   const deepDiveDarkEvents = hasDeepDive ? matchedDive.darkEvents || [] : [];
   const sortedDeepDiveVisits = sortByTimestamp(deepDiveVisits, "entry_time");
-  const sortedDeepDiveViolations = sortByTimestamp(deepDiveViolations, "start_time");
+  const sortedDeepDiveSuspiciousActivities = sortByTimestamp(deepDiveSuspiciousActivities, "start_time");
   const sortedDeepDiveDarkEvents = sortByTimestamp(deepDiveDarkEvents, "gap_start_time");
   const deepDiveVisitHours = deepDiveVisits.reduce(
     (sum, row) => sum + parseNumber(row.duration_hours),
     0
   );
+  const deepDiveDarkHours = deepDiveDarkEvents.reduce(
+    (sum, row) => sum + parseNumber(row.gap_duration_hours),
+    0
+  );
 
-  const deepDiveViolationTypes = Array.from(
+  const deepDiveSuspiciousActivityTypes = Array.from(
     new Set(
-      deepDiveViolations
+      deepDiveSuspiciousActivities
         .map((row) => String(row.violation_type || "").trim())
         .filter((value) => value.length > 0)
     )
@@ -175,41 +162,66 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
   const resolvedHours = parseNumber(
     preferDeep(hasDeepDive ? deepDiveVisitHours : null, vessel.total_hours_in_mpa)
   );
-  const resolvedViolations = parseNumber(
-    preferDeep(hasDeepDive ? deepDiveViolations.length : null, vessel.total_violations)
+  const resolvedSuspiciousActivityCount = parseNumber(
+    preferDeep(hasDeepDive ? deepDiveSuspiciousActivities.length : null, vessel.total_violations)
   );
-  const resolvedViolationTypes = preferDeep(
-    hasDeepDive ? deepDiveViolationTypes : null,
+  const resolvedSuspiciousActivityTypes = preferDeep(
+    hasDeepDive ? deepDiveSuspiciousActivityTypes : null,
     vessel.violation_types
   );
 
   const resolvedDarkEvents = parseNumber(
-    preferDeep(hasDeepDive ? deepDiveDarkEvents.length : null, vessel.dark_events)
+    preferDeep(hasDeepDive ? deepDiveDarkEvents.length : null, vessel.gap_events)
+  );
+  const resolvedDarkHours = parseNumber(
+    preferDeep(hasDeepDive ? deepDiveDarkHours : null, vessel.total_gap_hours)
   );
 
   const risk = String(vessel.risk_category || "").toUpperCase();
 
   const overallSentence =
-    risk === "HIGH" || risk === "CRITICAL"
-      ? `This vessel is in the high-concern tier.`
-      : risk === "MEDIUM"
-        ? `This vessel is in the medium-concern tier.`
-        : `This vessel is currently in the low-concern tier.`;
+    risk === "CRITICAL"
+      ? `This vessel is in the critical-risk tier.`
+      : risk === "HIGH"
+        ? `This vessel is in the high-risk tier.`
+        : risk === "MEDIUM"
+          ? `This vessel is in the medium-risk tier.`
+          : `This vessel is currently in the low-risk tier.`;
 
   const visitsSentence = `This vessel made ${resolvedVisits} visit${resolvedVisits === 1 ? "" : "s"} to this region in the selected time period. In total, it spent ${resolvedHours.toFixed(1)} hours in this region.`;
   const visitsTableNode =
     hasDeepDive && sortedDeepDiveVisits.length > 0 ? (
       <section className="violation-detail-table-wrap">
         <table className="violation-detail-table">
-          <thead>
-            <tr>
-              <th>Entry Time</th>
-              <th>Exit Time</th>
-              <th>Duration (Hours)</th>
-              <th>Average Speed (knots)</th>
-              <th>Fishing Detected</th>
-            </tr>
-          </thead>
+            <thead>
+              <tr>
+                <th>Entry Time</th>
+                <th>Exit Time</th>
+                <th>
+                  <span className="table-header-cell">
+                    Duration (Hours)
+                    <Tooltip
+                      ariaLabel="Why visit duration matters"
+                      variant="superscript"
+                      placement="bottom"
+                      content={TOOLTIP_CONTENT.specificVessel.visitDurationHours}
+                    />
+                  </span>
+                </th>
+                <th>
+                  <span className="table-header-cell">
+                    Average Speed (knots)
+                    <Tooltip
+                      ariaLabel="Why average speed matters"
+                      variant="superscript"
+                      placement="bottom"
+                      content={TOOLTIP_CONTENT.specificVessel.averageSpeedKnots}
+                    />
+                  </span>
+                </th>
+                <th>Fishing Detected</th>
+              </tr>
+            </thead>
           <tbody>
             {sortedDeepDiveVisits.map((row, index) => (
               <tr key={`visit-${index}`}>
@@ -228,32 +240,32 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
         Detailed per-visit records are not available for this vessel.
       </p>
     );
-  const violationSentence = `This vessel was detected with ${resolvedViolations} violations.`;
-  const violationSummaryNode = (
+  const suspiciousActivitySentence = `There were ${resolvedSuspiciousActivityCount} detected instances where this vessel exhibited suspicious behavior.`;
+  const suspiciousActivitySummaryNode = (
     <>
-      {violationSentence}
-      {resolvedViolations > 0 ? (
+      {suspiciousActivitySentence}
+      {resolvedSuspiciousActivityCount > 0 ? (
         <>
           {" "}
-          The violations detected include:{" "}
-          <ViolationTypeTags value={resolvedViolationTypes} emptyLabel="None" />.
+          These activities include:{" "}
+          <ViolationTypeTags value={resolvedSuspiciousActivityTypes} emptyLabel="None" />.
         </>
       ) : null}
     </>
   );
-  const violationTableNode =
-    hasDeepDive && sortedDeepDiveViolations.length > 0 ? (
+  const suspiciousActivityTableNode =
+    hasDeepDive && sortedDeepDiveSuspiciousActivities.length > 0 ? (
       <section className="violation-detail-table-wrap">
         <table className="violation-detail-table">
           <thead>
             <tr>
               <th>Detection Date</th>
-              <th>Violation Type</th>
+              <th>Suspicious Activity</th>
               <th>Verified</th>
             </tr>
           </thead>
           <tbody>
-            {sortedDeepDiveViolations.map((row, index) => (
+            {sortedDeepDiveSuspiciousActivities.map((row, index) => (
               <tr key={`violation-${index}`}>
                 <td>{getDetectionTimestamp(row.start_time, row.end_time)}</td>
                 <td>
@@ -275,7 +287,7 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
       </section>
     ) : (
       <p className="detail-section-note">
-        Detailed per-violation records are not available for this vessel.
+        Detailed per-suspicious-activity records are not available for this vessel.
       </p>
     );
   const darkActivityTermNode = (
@@ -284,14 +296,15 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
       <Tooltip
         ariaLabel="What is dark activity?"
         variant="superscript"
-        content="Dark activity refers to periods in which a vessel turns off its Automatic Identification System (AIS) transponders. This allows it to hide its location and activities from public surveillance."
+        content={TOOLTIP_CONTENT.darkActivity}
       />
     </>
   );
   const darkSentence = (
     <>
-      There {resolvedDarkEvents === 1 ? "was 1 gap" : `were ${resolvedDarkEvents} gaps`}{" "}
-      in which the vessel exhibited {darkActivityTermNode}.
+      There {resolvedDarkEvents === 1 ? "was 1 period" : `were ${resolvedDarkEvents} periods`} in
+      which the vessel exhibited {darkActivityTermNode}. In total, it had {" "}
+      {resolvedDarkHours.toFixed(1)} hours where its "went dark."
     </>
   );
   const darkTableNode =
@@ -329,7 +342,7 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
       title: "Vessel Profile",
       summary: "Core vessel identity and equipment details.",
       items: [
-        field("Flag State", resolvedFlag),
+        field("Flag", resolvedFlag),
         field("Vessel Type", resolvedType),
         field("Gear Type", resolvedGear),
         field("Length (m)", resolvedLength),
@@ -350,13 +363,13 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
       items: []
     },
     {
-      title: "Violations",
-      summary: violationSummaryNode,
-      node: violationTableNode,
+      title: "Suspicious Activities",
+      summary: suspiciousActivitySummaryNode,
+      node: suspiciousActivityTableNode,
       items: []
     },
     {
-      title: "Dark Activity Behavior",
+      title: "Dark Activity",
       summary: darkSentence,
       node: darkTableNode,
       items: []
@@ -375,7 +388,7 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
           <Tooltip
             ariaLabel="What is MMSI?"
             variant="superscript"
-            content="A Maritime Mobile Service Identity (MMSI) is a unique 9-digit number assigned to each vessel for identifying it in digital, radio, and AIS communications."
+            content={TOOLTIP_CONTENT.mmsi}
           />
           : <span className="mmsi-value">{vessel.mmsi || "Unknown"}</span>
         </span>
@@ -385,7 +398,34 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
 
       {detailSections.map((section) => (
         <section key={section.title} className="detail-section">
-          <h4 className="detail-section-title">{section.title}</h4>
+          <h4 className="detail-section-title">
+            {section.title}
+            {section.title === "Visits in This Region" ? (
+              <Tooltip
+                ariaLabel="Why repeated visits matter"
+                variant="superscript"
+                content={TOOLTIP_CONTENT.specificVessel.visitsInRegion}
+              />
+            ) : null}
+            {section.title === "Suspicious Activities" ? (
+              <Tooltip
+                ariaLabel="About Suspicious Activities"
+                variant="superscript"
+                content={
+                  <>
+                    {TOOLTIP_CONTENT.vesselTableHeaders.violation_types}
+                    <br />
+                    {Object.entries(VIOLATION_TYPE_DESCRIPTIONS).map(([type, description], index) => (
+                      <span key={type}>
+                        {index > 0 ? <br /> : null}
+                        <strong>{type}</strong>: {description}
+                      </span>
+                    ))}
+                  </>
+                }
+              />
+            ) : null}
+          </h4>
           <p className="detail-section-note">{section.summary}</p>
           {section.node ? (
             section.node
@@ -393,7 +433,38 @@ export default function SpecificVesselView({ vessel, onBack, deepDiveData }) {
             <ul className="detail-bullets">
               {section.items.map((item) => (
                 <li key={`${section.title}-${item.label}`} className="detail-bullet-item">
-                  <strong>{item.label}:</strong> {item.node || item.value}
+	                  <strong>
+	                    {item.label}
+	                    {item.label === "Gear Type" ? (
+	                      <Tooltip
+	                        ariaLabel={`What is ${item.label}?`}
+	                        variant="superscript"
+	                        content={TOOLTIP_CONTENT.specificVessel.gearType}
+	                      />
+	                    ) : null}
+	                    {item.label === "Vessel Type" ? (
+	                      <Tooltip
+	                        ariaLabel="What is Vessel Type?"
+	                        variant="superscript"
+	                        content={
+	                          <>
+	                            {TOOLTIP_CONTENT.specificVessel.vesselType}
+	                            <br />
+	                            {Object.entries(TOOLTIP_CONTENT.specificVessel.vesselTypeCategories).map(
+	                              ([type, description], index) => (
+	                                <span key={type}>
+	                                  {index > 0 ? <br /> : null}
+	                                  <strong>{type}</strong>: {description}
+	                                </span>
+	                              )
+	                            )}
+	                          </>
+	                        }
+	                      />
+	                    ) : null}
+	                    :
+	                  </strong>{" "}
+                  {item.node || item.value}
                 </li>
               ))}
             </ul>

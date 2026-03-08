@@ -4,13 +4,14 @@ Interactive dashboard for exploring anomalous vessel activity in and around MPAs
 - map-first MPA view
 - MPA summary insights
 - vessel-level details
-- optional deep-dive enrichment from `dashboard/data/vessel_details`
+- optional deep-dive enrichment from `dashboard/data/reports/vessels`
 
 ## Project Structure
 
 - `dashboard/` - Next.js app
-- `dashboard/data/mpa_report/` - MPA-level CSV reports
-- `dashboard/data/vessel_details/` - vessel deep-dive CSVs (identity/visits/violations/dark events)
+- `dashboard/data/reports/mpa_registry.csv` - canonical MPA ID/name to files mapping
+- `dashboard/data/reports/mpa/` - MPA-level CSV reports
+- `dashboard/data/reports/vessels/<vessel_slug>/` - vessel deep-dive CSVs (identity/visits/violations/dark events)
 - `dashboard/data/region_geojsons/` - MPA geometry files
 
 ## Prerequisites
@@ -53,12 +54,16 @@ Then open `http://localhost:3001`.
 ## Data Notes
 
 - Main MPA report currently used by the UI:
-  - `dashboard/data/mpa_report/charlie_gibbs_report.csv`
-- Deep-dive files are auto-discovered when named like:
-  - `*_deep_dive_identity.csv`
-  - `*_deep_dive_visits.csv`
-  - `*_deep_dive_violations.csv`
-  - `*_deep_dive_dark_events.csv`
+  - `dashboard/data/reports/mpa/charlie_gibbs_north_sea.csv`
+- MPA dataset mapping is controlled by:
+  - `dashboard/data/reports/mpa_registry.csv`
+  - required columns: `mpa_id`, `display_name`, `report_file`, `geojson_file`, `is_default`
+  - the first row with `is_default=1` is selected by the app (or first row if none are marked default)
+- Deep-dive files are auto-discovered when organized like:
+  - `dashboard/data/reports/vessels/<vessel_slug>/identity.csv`
+  - `dashboard/data/reports/vessels/<vessel_slug>/visits.csv`
+  - `dashboard/data/reports/vessels/<vessel_slug>/violations.csv`
+  - `dashboard/data/reports/vessels/<vessel_slug>/dark_events.csv`
 
 If deep-dive data exists for a vessel, the platform uses it to enrich vessel details.
 
@@ -73,5 +78,5 @@ npm run dev
 ```
 
 - If the app starts but looks empty, verify CSV files exist under:
-  - `dashboard/data/mpa_report/`
-  - `dashboard/data/vessel_details/`
+  - `dashboard/data/reports/mpa/`
+  - `dashboard/data/reports/vessels/`

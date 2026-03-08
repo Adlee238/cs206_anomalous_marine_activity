@@ -1,0 +1,33 @@
+{
+  "type": "FeatureCollection",
+  "name": "North Atlantic Current and Evlanov Sea Basin",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "SITE_ID": "NACES"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [-39.681, 53.122],
+              [-37.979, 50.996],
+              [-31.998, 50.994],
+              [-31.999, 46.765],
+              [-39.916, 41.911],
+              [-42.0, 44.18],
+              [-42.0, 45.492],
+              [-40.506, 46.504],
+              [-41.173, 48.762],
+              [-42.001, 49.588],
+              [-42.0, 53.118],
+              [-39.681, 53.122]
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

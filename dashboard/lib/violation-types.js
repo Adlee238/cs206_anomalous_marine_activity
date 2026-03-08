@@ -1,12 +1,6 @@
-export const VIOLATION_TYPE_DESCRIPTIONS = {
-  "Dark Period":
-    "The vessel turned off its AIS transponder, indicating potential concealment of activity.",
-  "Zone Violation": "The vessel entered or operated in a restricted area.",
-  "Speed Violation":
-    "The vessel showed speed patterns that deviated from expected behaviors for normal transit.",
-  "Unauthorized Entry": "The vessel was detected in the region without the authority to do so.",
-  "Fishing Activity": "The vessel showed signs of conducting fishing."
-};
+import { TOOLTIP_CONTENT } from "./tooltip-content";
+
+export const VIOLATION_TYPE_DESCRIPTIONS = TOOLTIP_CONTENT.violationTypeDescriptions;
 
 export function parseViolationTypes(value) {
   if (!value) {

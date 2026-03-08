@@ -1,12 +1,16 @@
+import { useEffect, useMemo, useState } from "react";
 import { getRiskRowClass } from "../../../lib/mpa-viewer";
 import { VIOLATION_TYPE_DESCRIPTIONS, parseViolationTypes } from "../../../lib/violation-types";
+import { TOOLTIP_CONTENT } from "../../../lib/tooltip-content";
 import Tooltip from "../ui/tooltip";
+
+const ROWS_PER_PAGE = 15;
 
 const HEADER_LABELS = {
   vessel_name: "Vessel Name",
   flag: "Flag",
-  total_violations: "Number of Violations",
-  violation_types: "Violation Types"
+  total_violations: "Activity Count",
+  violation_types: "Suspicious Activities"
 };
 
 function getHeaderLabel(header) {
@@ -15,18 +19,18 @@ function getHeaderLabel(header) {
 
 function getHeaderTooltip(header) {
   if (header === "vessel_name") {
-    return "Registered vessel name.";
+    return TOOLTIP_CONTENT.vesselTableHeaders.vessel_name;
   }
   if (header === "flag") {
-    return "Country where the vessel is registered.";
+    return TOOLTIP_CONTENT.vesselTableHeaders.flag;
   }
   if (header === "total_violations") {
-    return "Number of detected violation events for the vessel.";
+    return TOOLTIP_CONTENT.vesselTableHeaders.total_violations;
   }
   if (header === "violation_types") {
     return (
       <>
-        Types of violations the vessel was detected with. Possible categories include:
+        {TOOLTIP_CONTENT.vesselTableHeaders.violation_types}
         <br />
         {Object.entries(VIOLATION_TYPE_DESCRIPTIONS).map(([type, description], index) => (
           <span key={type}>
@@ -48,15 +52,29 @@ function formatViolationTypes(value) {
 export default function VesselTableView({
   visibleHeaders,
   rowsToShow,
-  sortBy,
-  order,
-  onSort,
   onSelectVessel
 }) {
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(rowsToShow.length / ROWS_PER_PAGE));
+  const pagedRows = useMemo(() => {
+    const start = (page - 1) * ROWS_PER_PAGE;
+    return rowsToShow.slice(start, start + ROWS_PER_PAGE);
+  }, [page, rowsToShow]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [rowsToShow.length]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
   return (
     <>
       <p className="activity-intro">
-        For this region, the following vessels were detected in the provided time range. Each entry is colored based on its risk level. Click on a vessel to see more details.
+        For this region, the following vessels were detected in the specified time range. Each entry is colored based on its risk score. Click on a vessel to see more details.
       </p>
 
       <section className="table-wrap">
@@ -64,15 +82,12 @@ export default function VesselTableView({
           <thead>
             <tr>
               {visibleHeaders.map((header) => {
-                const arrow = sortBy === header ? (order === "asc" ? " ▲" : " ▼") : "";
                 const headerLabel = getHeaderLabel(header);
                 const headerTooltip = getHeaderTooltip(header);
                 return (
                   <th key={header}>
                     <span className="table-header-cell">
-                      <button type="button" className="table-sort-btn" onClick={() => onSort(header)}>
-                        {headerLabel + arrow}
-                      </button>
+                      <span className="table-header-label">{headerLabel}</span>
                       {headerTooltip ? (
                         <Tooltip
                           ariaLabel={`About ${headerLabel}`}
@@ -88,14 +103,14 @@ export default function VesselTableView({
             </tr>
           </thead>
           <tbody>
-            {rowsToShow.map((row, index) => (
+            {pagedRows.map((row, index) => (
               <tr
-                key={`row-${index}`}
+                key={`row-${(page - 1) * ROWS_PER_PAGE + index}`}
                 className={`${getRiskRowClass(row.risk_category)} vessel-row`}
                 onClick={() => onSelectVessel(row)}
               >
                 {visibleHeaders.map((header) => (
-                  <td key={`${index}-${header}`}>
+                  <td key={`${(page - 1) * ROWS_PER_PAGE + index}-${header}`}>
                     {header === "violation_types" ? (
                       formatViolationTypes(row[header])
                     ) : (
@@ -108,6 +123,28 @@ export default function VesselTableView({
           </tbody>
         </table>
       </section>
+
+      <div className="table-pagination">
+        <button
+          type="button"
+          className="table-page-btn"
+          onClick={() => setPage((current) => Math.max(1, current - 1))}
+          disabled={page <= 1}
+        >
+          Previous
+        </button>
+        <span className="table-page-status">
+          Page {page} of {totalPages}
+        </span>
+        <button
+          type="button"
+          className="table-page-btn"
+          onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+          disabled={page >= totalPages}
+        >
+          Next
+        </button>
+      </div>
     </>
   );
 }

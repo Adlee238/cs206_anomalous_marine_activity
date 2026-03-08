@@ -1,0 +1,8 @@
+{
+  "regionId": "naces",
+  "regionName": "North Atlantic Current & Evlanov Sea Basin MPA (NACES)",
+  "restrictions": {
+    "fishingPolicy": "In NACES, fishing activity is of high concern due to sensitive habitats and species. Longline fishing and bottom trawling is of high concern, but is not explicitly illegal. Fishing is governed by separate international bodies, see Context Tab for more detail.",
+    "entryPolicy": "In NACES, vessel entry is not automatically illegal because NACES is in international waters and is not a strict closed-enforcement zone. Entry events should be interpreted with context: repeated returns, long stays, low-speed loitering, or dark periods can indicate elevated risk and should trigger closer investigation."
+  }
+}
