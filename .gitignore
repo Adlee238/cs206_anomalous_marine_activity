@@ -1,4 +1,5 @@
 .DS_Store
 dashboard/.next/
+dashboard/out/
 dashboard/node_modules/
 dashboard/.env.local
